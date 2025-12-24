@@ -593,7 +593,7 @@ function InfographicRenderer({ options, theme }: InfographicRendererProps) {
   );
 }
 
-export function InfographicGallery({ onBack, onNavigateToPlayground }: GalleryProps) {
+export function InfographicGallery({ onBack: _onBack, onNavigateToPlayground }: GalleryProps) {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('compare');
   const [selectedTheme, setSelectedTheme] = useState('light');
 
