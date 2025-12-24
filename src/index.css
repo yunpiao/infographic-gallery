@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* 851tegakizatsu font for hand-drawn theme */
+@font-face {
+  font-family: '851tegakizatsu';
+  src: url('https://unpkg.com/@aspect-build/fonts@0.0.1/851tegakizatsu/851tegakizatsu.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
