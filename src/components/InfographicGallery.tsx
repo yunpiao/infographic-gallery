@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Infographic, getTemplates, type InfographicOptions } from '@antv/infographic';
-import { ArrowLeft, Grid3X3, LayoutList, GitCompare, Clock, Network, TreeDeciduous, BarChart3, Pencil } from 'lucide-react';
+import { LayoutDashboard, Grid3X3, LayoutList, GitCompare, Clock, Network, TreeDeciduous, BarChart3, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Trigger template registration and get all templates
@@ -614,12 +614,9 @@ export function InfographicGallery({ onBack, onNavigateToPlayground }: GalleryPr
       <header className="sticky top-0 z-10 bg-white border-b border-neutral-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
+            <div className="p-2">
+              <LayoutDashboard size={20} className="text-blue-600" />
+            </div>
             <h1 className="text-xl font-semibold text-neutral-800">Infographic Gallery</h1>
           </div>
 

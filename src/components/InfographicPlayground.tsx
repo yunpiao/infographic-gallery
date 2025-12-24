@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Infographic, getTemplates, parseSyntax, type InfographicOptions } from '@antv/infographic';
-import { ArrowLeft, Play, RotateCcw, Copy, Check, Download, Code, Sparkles, FileImage, ClipboardCopy } from 'lucide-react';
+import { LayoutDashboard, Play, RotateCcw, Copy, Check, Download, Code, Sparkles, FileImage, ClipboardCopy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PlaygroundProps {
@@ -402,7 +402,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
               onClick={onBack}
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             >
-              <ArrowLeft size={20} />
+              <LayoutDashboard size={20} className="text-blue-600" />
             </button>
             <h1 className="text-xl font-semibold text-neutral-800">Infographic Playground</h1>
           </div>
