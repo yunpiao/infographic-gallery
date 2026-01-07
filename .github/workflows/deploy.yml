@@ -1,0 +1,33 @@
+name: Deploy to EdgeOne Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install EdgeOne CLI
+        run: npm install -g edgeone
+
+      - name: Deploy to EdgeOne Pages
+        run: edgeone pages deploy dist --name infographic-gallery --area global -t ${{ secrets.EDGEONE_API_TOKEN }}
