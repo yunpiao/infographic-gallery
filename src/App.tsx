@@ -22,7 +22,6 @@ export default function App() {
 
   return (
     <InfographicGallery
-      onBack={() => {}}
       onNavigateToPlayground={(config, theme) => {
         setPlaygroundConfig(config);
         if (theme) setPlaygroundTheme(theme);

@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Infographic, getTemplates, type InfographicOptions } from '@antv/infographic';
-import { LayoutDashboard, Grid3X3, LayoutList, GitCompare, Clock, Network, TreeDeciduous, BarChart3, Pencil } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Grid3X3,
+  LayoutList,
+  GitCompare,
+  Clock,
+  Network,
+  TreeDeciduous,
+  BarChart3,
+  Pencil,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button, Card, CardHeader, CardContent, Badge } from '@/components/ui';
 
 // Trigger template registration and get all templates
 const AVAILABLE_TEMPLATES = getTemplates();
@@ -13,7 +26,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
   const isHierarchy = template.startsWith('hierarchy-');
   const isChart = template.includes('chart-');
   const isPie = template.includes('pie');
-  
+
   if (isCompare && template.includes('swot')) {
     return {
       title: 'SWOT 分析',
@@ -25,7 +38,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
       ],
     };
   }
-  
+
   if (isCompare) {
     return {
       title: '对比分析',
@@ -35,7 +48,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
       ],
     };
   }
-  
+
   if (isHierarchy) {
     return {
       title: '组织架构',
@@ -48,7 +61,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
       }],
     };
   }
-  
+
   if (isChart && isPie) {
     return {
       title: '数据分布',
@@ -60,7 +73,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
       ],
     };
   }
-  
+
   if (isChart) {
     return {
       title: '数据统计',
@@ -73,7 +86,7 @@ function generateDefaultData(template: string): { title: string; items: any[] } 
       ],
     };
   }
-  
+
   // Default for list, sequence, relation, quadrant
   return {
     title: template.split('-').slice(0, 2).join(' '),
@@ -97,7 +110,7 @@ function categorizeTemplates(): Record<CategoryKey, string[]> {
     relation: [],
     chart: [],
   };
-  
+
   for (const t of AVAILABLE_TEMPLATES) {
     if (t.startsWith('compare-')) categories.compare.push(t);
     else if (t.startsWith('list-')) categories.list.push(t);
@@ -107,7 +120,7 @@ function categorizeTemplates(): Record<CategoryKey, string[]> {
     else if (t.startsWith('relation-')) categories.relation.push(t);
     else if (t.startsWith('chart-')) categories.chart.push(t);
   }
-  
+
   return categories;
 }
 
@@ -128,392 +141,14 @@ interface CategoryInfo {
 }
 
 const CATEGORIES: CategoryInfo[] = [
-  { key: 'compare', name: `对比 (${CATEGORIZED_TEMPLATES.compare.length})`, icon: <GitCompare size={20} />, description: 'SWOT 分析、对比图' },
-  { key: 'list', name: `列表 (${CATEGORIZED_TEMPLATES.list.length})`, icon: <LayoutList size={20} />, description: '网格、行列布局' },
-  { key: 'sequence', name: `流程 (${CATEGORIZED_TEMPLATES.sequence.length})`, icon: <Clock size={20} />, description: '时间线、步骤流程' },
-  { key: 'quadrant', name: `象限 (${CATEGORIZED_TEMPLATES.quadrant.length})`, icon: <Grid3X3 size={20} />, description: '四象限分析图' },
-  { key: 'hierarchy', name: `层级 (${CATEGORIZED_TEMPLATES.hierarchy.length})`, icon: <TreeDeciduous size={20} />, description: '树形结构、组织架构' },
-  { key: 'relation', name: `关系 (${CATEGORIZED_TEMPLATES.relation.length})`, icon: <Network size={20} />, description: '韦恩图、关系网络' },
-  { key: 'chart', name: `图表 (${CATEGORIZED_TEMPLATES.chart.length})`, icon: <BarChart3 size={20} />, description: '柱状图、条形图' },
+  { key: 'compare', name: `对比`, icon: <GitCompare size={18} />, description: 'SWOT 分析、对比图' },
+  { key: 'list', name: `列表`, icon: <LayoutList size={18} />, description: '网格、行列布局' },
+  { key: 'sequence', name: `流程`, icon: <Clock size={18} />, description: '时间线、步骤流程' },
+  { key: 'quadrant', name: `象限`, icon: <Grid3X3 size={18} />, description: '四象限分析图' },
+  { key: 'hierarchy', name: `层级`, icon: <TreeDeciduous size={18} />, description: '树形结构、组织架构' },
+  { key: 'relation', name: `关系`, icon: <Network size={18} />, description: '韦恩图、关系网络' },
+  { key: 'chart', name: `图表`, icon: <BarChart3 size={18} />, description: '柱状图、条形图' },
 ];
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _TEMPLATE_OPTIONS: Record<CategoryKey, InfographicOptions[]> = {
-  compare: [
-    {
-      width: 600,
-      height: 400,
-      template: 'compare-swot',
-      data: {
-        title: 'SWOT 战略分析',
-        items: [
-          { label: 'Strengths', children: [{ label: '技术创新能力强' }, { label: '品牌知名度高' }] },
-          { label: 'Weaknesses', children: [{ label: '成本控制待优化' }, { label: '市场覆盖有限' }] },
-          { label: 'Opportunities', children: [{ label: '新兴市场需求增长' }, { label: '政策扶持力度大' }] },
-          { label: 'Threats', children: [{ label: '竞争对手快速发展' }, { label: '技术迭代加速' }] },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'compare-binary-horizontal-underline-text-arrow',
-      data: {
-        title: '商业模式对比',
-        items: [
-          { label: '传统模式', children: [{ label: '线下渠道为主', desc: '依赖实体店面' }, { label: '人工服务', desc: '服务成本较高' }] },
-          { label: '数字化转型', children: [{ label: '全渠道整合', desc: '线上线下融合' }, { label: '智能服务', desc: '提升效率' }] },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'compare-hierarchy-left-right-circle-node-pill-badge',
-      data: {
-        title: '产品功能对比',
-        items: [
-          { label: '基础版', children: [{ label: '核心功能' }, { label: '基础支持' }] },
-          { label: '专业版', children: [{ label: '高级功能' }, { label: '优先支持' }] },
-        ],
-      },
-    },
-  ],
-  list: [
-    {
-      width: 600,
-      height: 300,
-      template: 'list-row-simple-horizontal-arrow',
-      data: {
-        title: '项目里程碑',
-        items: [
-          { label: '需求分析', desc: '明确项目目标' },
-          { label: '系统设计', desc: '架构方案制定' },
-          { label: '开发实现', desc: '编码与测试' },
-          { label: '上线部署', desc: '交付与运维' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 350,
-      template: 'list-row-horizontal-icon-arrow',
-      data: {
-        title: '互联网技术演进',
-        items: [
-          { label: '万维网诞生', desc: 'Tim 发明 WWW' },
-          { label: 'Web 2.0', desc: '用户生成内容' },
-          { label: '移动互联网', desc: '智能手机普及' },
-          { label: 'AI 时代', desc: '大模型应用' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'list-grid-badge-card',
-      data: {
-        title: '核心功能特性',
-        items: [
-          { label: '数据分析', desc: '智能数据处理', value: 1 },
-          { label: '报表生成', desc: '自动化报告', value: 2 },
-          { label: '团队协作', desc: '高效沟通工具', value: 3 },
-          { label: '安全保障', desc: '数据加密存储', value: 4 },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 350,
-      template: 'list-pyramid-rounded-rect-node',
-      data: {
-        title: '需求层次',
-        items: [
-          { label: '自我实现' },
-          { label: '尊重需求' },
-          { label: '社交需求' },
-          { label: '安全需求' },
-          { label: '生理需求' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'list-grid-ribbon-card',
-      data: {
-        title: '服务优势',
-        items: [
-          { label: '专业团队', desc: '10年行业经验' },
-          { label: '快速响应', desc: '7x24小时支持' },
-          { label: '定制方案', desc: '个性化服务' },
-          { label: '质量保障', desc: '严格品控' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 350,
-      template: 'list-sector-plain-text',
-      data: {
-        title: '业务分布',
-        items: [
-          { label: '华东区域', value: 35 },
-          { label: '华南区域', value: 28 },
-          { label: '华北区域', value: 22 },
-          { label: '西部区域', value: 15 },
-        ],
-      },
-    },
-  ],
-  sequence: [
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-timeline-simple',
-      data: {
-        title: '发展历程',
-        items: [
-          { label: '2020', desc: '公司成立' },
-          { label: '2021', desc: '获得 A 轮融资' },
-          { label: '2022', desc: '用户突破百万' },
-          { label: '2023', desc: '海外市场拓展' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-ascending-steps',
-      data: {
-        title: '成长阶梯',
-        items: [
-          { label: '初级', desc: '掌握基础技能' },
-          { label: '中级', desc: '独立完成项目' },
-          { label: '高级', desc: '带领团队' },
-          { label: '专家', desc: '行业影响力' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-snake-steps-pill-badge',
-      data: {
-        title: '学习路径',
-        items: [
-          { label: '基础知识', desc: '掌握核心概念' },
-          { label: '动手实践', desc: '完成入门项目' },
-          { label: '深入学习', desc: '理解原理' },
-          { label: '项目实战', desc: '综合应用' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-color-snake-steps-horizontal-icon-line',
-      data: {
-        title: '企业发展历程',
-        items: [
-          { label: '创意萌芽', time: '2017' },
-          { label: '项目启动', time: '2018' },
-          { label: '快速增长', time: '2019' },
-          { label: '规模扩张', time: '2020' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-roadmap-vertical-simple',
-      data: {
-        title: '产品路线图',
-        items: [
-          { label: 'Q1', desc: '基础功能上线' },
-          { label: 'Q2', desc: '用户增长优化' },
-          { label: 'Q3', desc: '企业版发布' },
-          { label: 'Q4', desc: '国际化拓展' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'sequence-horizontal-zigzag-simple',
-      data: {
-        title: '工作流程',
-        items: [
-          { label: '需求分析', desc: '明确目标' },
-          { label: '方案设计', desc: '制定计划' },
-          { label: '开发实现', desc: '编码测试' },
-          { label: '上线运营', desc: '持续优化' },
-        ],
-      },
-    },
-  ],
-  quadrant: [
-    {
-      width: 600,
-      height: 500,
-      template: 'quadrant-quarter-circular',
-      data: {
-        title: '时间管理矩阵',
-        items: [
-          { label: '紧急且重要', desc: '客户投诉、系统故障' },
-          { label: '重要但不紧急', desc: '战略规划、团队培训' },
-          { label: '紧急但不重要', desc: '部分会议、即时消息' },
-          { label: '不紧急不重要', desc: '社交媒体、闲聊' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 500,
-      template: 'quadrant-quarter-simple-card',
-      data: {
-        title: '产品优先级矩阵',
-        items: [
-          { label: '高价值高成本', desc: '核心功能开发' },
-          { label: '高价值低成本', desc: '快速迭代优化' },
-          { label: '低价值高成本', desc: '谨慎评估' },
-          { label: '低价值低成本', desc: '适时处理' },
-        ],
-      },
-    },
-  ],
-  hierarchy: [
-    {
-      width: 600,
-      height: 450,
-      template: 'hierarchy-tree-tech-style-rounded-rect-node',
-      data: {
-        title: '组织架构',
-        items: [
-          {
-            label: 'CEO',
-            children: [
-              { label: 'CTO', children: [{ label: '研发部' }, { label: '运维部' }] },
-              { label: 'CFO', children: [{ label: '财务部' }, { label: '审计部' }] },
-              { label: 'CMO', children: [{ label: '市场部' }, { label: '销售部' }] },
-            ],
-          },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'hierarchy-mindmap-branch-gradient-lined-palette',
-      data: {
-        title: '前端技术栈',
-        items: [
-          {
-            label: 'Frontend',
-            children: [
-              { label: 'HTML/CSS' },
-              { label: 'JavaScript' },
-              { label: 'React/Vue' },
-              { label: 'TypeScript' },
-            ],
-          },
-        ],
-      },
-    },
-  ],
-  relation: [
-    {
-      width: 600,
-      height: 400,
-      template: 'relation-circle-icon-badge',
-      data: {
-        title: '生态系统',
-        items: [
-          { label: '核心产品' },
-          { label: '合作伙伴' },
-          { label: '开发者' },
-          { label: '用户社区' },
-          { label: '技术支持' },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'relation-circle-circular-progress',
-      data: {
-        title: '技能分布',
-        items: [
-          { label: '前端', value: 85 },
-          { label: '后端', value: 75 },
-          { label: '数据库', value: 70 },
-          { label: 'DevOps', value: 60 },
-        ],
-      },
-    },
-  ],
-  chart: [
-    {
-      width: 600,
-      height: 400,
-      template: 'chart-column-simple',
-      data: {
-        title: '月度销售额（万元）',
-        items: [
-          { label: '1月', value: 120 },
-          { label: '2月', value: 150 },
-          { label: '3月', value: 180 },
-          { label: '4月', value: 200 },
-          { label: '5月', value: 220 },
-          { label: '6月', value: 250 },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'chart-bar-plain-text',
-      data: {
-        title: '各部门人数统计',
-        items: [
-          { label: '研发部', value: 45 },
-          { label: '市场部', value: 30 },
-          { label: '销售部', value: 25 },
-          { label: '运营部', value: 20 },
-          { label: '人事部', value: 10 },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'chart-pie-plain-text',
-      data: {
-        title: '市场份额分布',
-        items: [
-          { label: '产品A', value: 35 },
-          { label: '产品B', value: 28 },
-          { label: '产品C', value: 22 },
-          { label: '其他', value: 15 },
-        ],
-      },
-    },
-    {
-      width: 600,
-      height: 400,
-      template: 'chart-pie-donut-pill-badge',
-      data: {
-        title: '用户来源渠道',
-        items: [
-          { label: '搜索引擎', value: 40 },
-          { label: '社交媒体', value: 30 },
-          { label: '直接访问', value: 20 },
-          { label: '其他渠道', value: 10 },
-        ],
-      },
-    },
-  ],
-};
 
 const THEMES = ['light', 'dark', 'hand-drawn'];
 
@@ -536,7 +171,7 @@ function InfographicRenderer({ options, theme }: InfographicRendererProps) {
   useEffect(() => {
     const container = document.getElementById(containerId.current);
     if (!container) return;
-    
+
     // Destroy previous instance
     if (instanceRef.current) {
       instanceRef.current.destroy?.();
@@ -554,17 +189,17 @@ function InfographicRenderer({ options, theme }: InfographicRendererProps) {
         theme,
         data: options.data,
       });
-      
+
       instance.on('error', (err: Error | Error[]) => {
         const msg = Array.isArray(err) ? err.map(e => e.message).join('; ') : err.message;
         console.error('Infographic error event:', msg);
         setError(msg);
       });
-      
+
       instance.on('warning', (warnings: Error[]) => {
         console.warn('Infographic warnings:', warnings.map(w => w.message));
       });
-      
+
       instance.render();
       instanceRef.current = instance;
     } catch (err) {
@@ -585,7 +220,7 @@ function InfographicRenderer({ options, theme }: InfographicRendererProps) {
     <div className="relative w-full bg-white rounded-lg overflow-auto" style={{ minHeight: options.height || 400 }}>
       <div id={containerId.current} className="flex items-center justify-center" style={{ minWidth: '100%', minHeight: '100%' }} />
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600 text-sm p-4 text-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-red-50 text-red-600 text-sm p-4 text-center rounded-lg">
           {error}
         </div>
       )}
@@ -593,7 +228,7 @@ function InfographicRenderer({ options, theme }: InfographicRendererProps) {
   );
 }
 
-export function InfographicGallery({ onBack: _onBack, onNavigateToPlayground }: GalleryProps) {
+export function InfographicGallery({ onNavigateToPlayground }: Omit<GalleryProps, 'onBack'>) {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('compare');
   const [selectedTheme, setSelectedTheme] = useState('light');
 
@@ -608,34 +243,45 @@ export function InfographicGallery({ onBack: _onBack, onNavigateToPlayground }: 
     }));
   }, [activeCategory]);
 
+  const activeInfo = CATEGORIES.find(c => c.key === activeCategory);
+
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-neutral-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2">
-              <LayoutDashboard size={20} className="text-blue-600" />
+      <header className="sticky top-0 z-10 bg-[var(--card)] border-b border-[var(--border)] shadow-[var(--shadow-sm)]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 gradient-bg rounded-xl shadow-[var(--shadow-accent)]">
+              <LayoutDashboard size={22} className="text-white" />
             </div>
-            <h1 className="text-xl font-semibold text-neutral-800">Infographic Gallery</h1>
+            <div>
+              <h1 className="text-2xl font-display text-[var(--foreground)]">
+                Infographic <span className="gradient-text">Gallery</span>
+              </h1>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                {AVAILABLE_TEMPLATES.length}+ 专业信息图模板
+              </p>
+            </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-4">
             {onNavigateToPlayground && (
-              <button
+              <Button
                 onClick={() => onNavigateToPlayground()}
-                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="group"
               >
+                <Sparkles size={18} />
                 Playground
-              </button>
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              </Button>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-neutral-500">主题:</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--muted-foreground)]">主题</span>
               <select
                 value={selectedTheme}
                 onChange={(e) => setSelectedTheme(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-10 px-4 text-sm border border-[var(--border)] rounded-xl bg-[var(--card)] focus-ring transition-all hover:border-[var(--accent)]/30"
               >
                 {THEMES.map((theme) => (
                   <option key={theme} value={theme}>
@@ -648,76 +294,114 @@ export function InfographicGallery({ onBack: _onBack, onNavigateToPlayground }: 
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Section Label */}
+        <div className="mb-6">
+          <Badge variant="accent" dot dotPulse>
+            模板分类
+          </Badge>
+        </div>
+
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-3 mb-8">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                'group flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
                 activeCategory === cat.key
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-200'
+                  ? 'gradient-bg text-white shadow-[var(--shadow-accent)] -translate-y-0.5'
+                  : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)] hover:shadow-sm'
               )}
             >
-              {cat.icon}
+              <span className={cn(
+                'transition-transform duration-200',
+                activeCategory !== cat.key && 'group-hover:scale-110'
+              )}>
+                {cat.icon}
+              </span>
               <span>{cat.name}</span>
+              <span className={cn(
+                'px-2 py-0.5 rounded-full text-xs',
+                activeCategory === cat.key
+                  ? 'bg-white/20'
+                  : 'bg-[var(--muted)]'
+              )}>
+                {CATEGORIZED_TEMPLATES[cat.key].length}
+              </span>
             </button>
           ))}
         </div>
 
         {/* Category Description */}
-        <div className="mb-6 p-4 bg-white rounded-lg border border-neutral-200">
-          <p className="text-neutral-600">
-            <strong className="text-neutral-800">
-              {CATEGORIES.find((c) => c.key === activeCategory)?.name}
-            </strong>
-            {' - '}
-            {CATEGORIES.find((c) => c.key === activeCategory)?.description}
-          </p>
-        </div>
+        <Card className="mb-8">
+          <CardContent className="flex items-center gap-4">
+            <div className="p-3 gradient-bg rounded-xl">
+              {activeInfo?.icon && (
+                <span className="text-white">{activeInfo.icon}</span>
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                {activeInfo?.name} 模板
+              </h2>
+              <p className="text-[var(--muted-foreground)]">
+                {activeInfo?.description}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Templates Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {currentTemplates.map((options, index) => (
-            <div
+            <Card
               key={`${activeCategory}-${index}-${selectedTheme}`}
-              className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              hover
+              className="group"
             >
-              <div className="p-4 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-neutral-800">
+                  <h3 className="font-semibold text-[var(--foreground)]">
                     {(options.data as { title?: string })?.title || `模板 ${index + 1}`}
                   </h3>
-                  <p className="text-xs text-neutral-500 mt-1">
+                  <p className="text-xs font-mono text-[var(--muted-foreground)] mt-1">
                     {options.template as string}
                   </p>
                 </div>
                 {onNavigateToPlayground && (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => onNavigateToPlayground(options, selectedTheme)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Pencil size={14} />
                     编辑
-                  </button>
+                  </Button>
                 )}
-              </div>
-              <div className="p-4" style={{ minHeight: (Number(options.height) || 400) + 40 }}>
+              </CardHeader>
+              <CardContent style={{ minHeight: (Number(options.height) || 400) + 40 }}>
                 <InfographicRenderer options={options} theme={selectedTheme} />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
         {currentTemplates.length === 0 && (
-          <div className="text-center py-12 text-neutral-400">
-            该分类暂无模板示例
+          <div className="text-center py-20">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--muted)] flex items-center justify-center">
+              <LayoutDashboard size={28} className="text-[var(--muted-foreground)]" />
+            </div>
+            <p className="text-[var(--muted-foreground)]">该分类暂无模板示例</p>
           </div>
         )}
       </div>
+
+      {/* Decorative Elements */}
+      <div className="radial-glow w-96 h-96 -top-48 -right-48 fixed" />
+      <div className="radial-glow w-64 h-64 bottom-20 -left-32 fixed" />
     </div>
   );
 }

@@ -1,3 +1,8 @@
+/* ===== SaaS Design System ===== */
+
+/* Google Fonts - must be at the top */
+@import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @import "tailwindcss";
 
 /* 851tegakizatsu font for hand-drawn theme */
@@ -7,4 +12,186 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+
+/* ===== Design Tokens (CSS Variables) ===== */
+:root {
+  /* Colors */
+  --background: #FAFAFA;
+  --foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #0052FF;
+  --accent-secondary: #4D7CFF;
+  --accent-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --card: #FFFFFF;
+  --ring: #0052FF;
+
+  /* Typography */
+  --font-display: 'Calistoga', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+  --shadow-accent: 0 4px 14px rgba(0,82,255,0.25);
+  --shadow-accent-lg: 0 8px 24px rgba(0,82,255,0.35);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+}
+
+/* ===== Base Styles ===== */
+html {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* ===== Typography Classes ===== */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ===== Gradient Text ===== */
+.gradient-text {
+  background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===== Gradient Background ===== */
+.gradient-bg {
+  background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+}
+
+.gradient-bg-135 {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+}
+
+/* ===== Inverted Section (Dark) ===== */
+.section-inverted {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+.section-inverted .text-muted {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== Dot Pattern Texture ===== */
+.dot-pattern {
+  background-image: radial-gradient(circle, white 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.03;
+}
+
+/* ===== Radial Glow ===== */
+.radial-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent);
+  filter: blur(150px);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* ===== Focus Ring ===== */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* ===== Animations ===== */
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s infinite;
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 60s linear infinite;
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-dot,
+  .animate-float,
+  .animate-rotate-slow {
+    animation: none;
+  }
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
 }

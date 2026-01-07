@@ -1,7 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Infographic, getTemplates, parseSyntax, type InfographicOptions } from '@antv/infographic';
-import { LayoutDashboard, Play, RotateCcw, Copy, Check, Download, Code, Sparkles, FileImage, ClipboardCopy } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Play,
+  RotateCcw,
+  Copy,
+  Check,
+  Download,
+  Code,
+  Sparkles,
+  FileImage,
+  ClipboardCopy,
+  X,
+  ArrowLeft,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button, Card, CardHeader, CardContent, Badge } from '@/components/ui';
 
 interface PlaygroundProps {
   onBack: () => void;
@@ -224,7 +238,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const [svgSource, setSvgSource] = useState('');
   const [promptCopied, setPromptCopied] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
-  
+
   const [containerId] = useState(() => `playground-${Math.random().toString(36).slice(2)}`);
   const instanceRef = useRef<Infographic | null>(null);
 
@@ -254,19 +268,18 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
         setRenderError(msg);
       });
 
-
       instance.render();
       instanceRef.current = instance;
     } catch (err) {
       setRenderError(err instanceof Error ? err.message : 'Unknown error');
     }
-  }, []);
+  }, [containerId]);
 
   const handleRender = useCallback(() => {
     setParseError(null);
     try {
       let config: InfographicOptions;
-      
+
       if (inputMode === 'syntax') {
         const result = parseSyntax(syntaxText);
         if (result.errors && result.errors.length > 0) {
@@ -277,7 +290,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
       } else {
         config = JSON.parse(jsonText) as InfographicOptions;
       }
-      
+
       renderInfographic(config, selectedTheme);
     } catch (err) {
       setParseError(err instanceof Error ? err.message : '解析失败');
@@ -303,7 +316,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const getSvgElement = useCallback(() => {
     const container = document.getElementById(containerId);
     return container?.querySelector('svg');
-  }, []);
+  }, [containerId]);
 
   const getSvgString = useCallback(() => {
     const svg = getSvgElement();
@@ -349,7 +362,6 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
     if (!instanceRef.current) return;
     try {
       const dataUrl = await instanceRef.current.toDataURL({ type: 'png' });
-      // Convert data URL to blob
       const res = await fetch(dataUrl);
       const blob = await res.blob();
       await navigator.clipboard.write([
@@ -376,12 +388,11 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
 
   // 实时渲染：输入变化或主题变化时自动渲染
   useEffect(() => {
-    // 防抖：500ms 后渲染
     const timer = setTimeout(() => {
       handleRender();
     }, 500);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jsonText, syntaxText, inputMode, selectedTheme]);
 
   useEffect(() => {
@@ -393,33 +404,46 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-neutral-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
+      <header className="sticky top-0 z-10 bg-[var(--card)] border-b border-[var(--border)] shadow-[var(--shadow-sm)]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onBack}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+              className="gap-2"
             >
-              <LayoutDashboard size={20} className="text-blue-600" />
-            </button>
-            <h1 className="text-xl font-semibold text-neutral-800">Infographic Playground</h1>
+              <ArrowLeft size={18} />
+              返回
+            </Button>
+            <div className="h-6 w-px bg-[var(--border)]" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 gradient-bg rounded-lg">
+                <LayoutDashboard size={18} className="text-white" />
+              </div>
+              <h1 className="text-xl font-display text-[var(--foreground)]">
+                Infographic <span className="gradient-text">Playground</span>
+              </h1>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setShowPrompt(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium"
+              className="gap-2"
             >
               <Sparkles size={16} />
               AI 提示词
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-neutral-500">主题:</span>
+            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--muted-foreground)]">主题</span>
               <select
                 value={selectedTheme}
                 onChange={(e) => setSelectedTheme(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-9 px-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] focus-ring transition-all hover:border-[var(--accent)]/30"
               >
                 {THEMES.map((theme) => (
                   <option key={theme} value={theme}>{theme}</option>
@@ -430,15 +454,15 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
         </div>
       </header>
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-6">
         {/* Example Buttons */}
-        <div className="mb-4 flex flex-wrap gap-2">
-          <span className="text-sm text-neutral-500 py-1">示例:</span>
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <Badge variant="muted">示例模板</Badge>
           {EXAMPLE_CONFIGS.map((example) => (
             <button
               key={example.name}
               onClick={() => handleExampleSelect(example.config)}
-              className="px-3 py-1 text-sm bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+              className="px-4 py-1.5 text-sm bg-[var(--card)] border border-[var(--border)] rounded-lg hover:border-[var(--accent)]/30 hover:shadow-sm transition-all"
             >
               {example.name}
             </button>
@@ -447,14 +471,16 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
 
         <div className="grid lg:grid-cols-2 gap-6 h-[calc(100vh-220px)]">
           {/* Editor Panel */}
-          <div className="flex flex-col bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between">
+          <Card className="flex flex-col overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between py-3">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setInputMode('json')}
                   className={cn(
-                    "px-3 py-1 text-sm rounded-lg transition-colors",
-                    inputMode === 'json' ? "bg-blue-600 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                    "px-4 py-1.5 text-sm rounded-lg transition-all font-medium",
+                    inputMode === 'json'
+                      ? "gradient-bg text-white shadow-sm"
+                      : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   )}
                 >
                   JSON
@@ -462,192 +488,191 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
                 <button
                   onClick={() => setInputMode('syntax')}
                   className={cn(
-                    "px-3 py-1 text-sm rounded-lg transition-colors",
-                    inputMode === 'syntax' ? "bg-blue-600 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                    "px-4 py-1.5 text-sm rounded-lg transition-all font-medium",
+                    inputMode === 'syntax'
+                      ? "gradient-bg text-white shadow-sm"
+                      : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                   )}
                 >
                   语法
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCopy}
-                  className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
                   title="复制"
                 >
                   {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleReset}
-                  className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
                   title="重置"
                 >
                   <RotateCcw size={16} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
                   onClick={handleRender}
-                  className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  className="gap-1.5"
                 >
                   <Play size={14} />
                   渲染
-                </button>
+                </Button>
               </div>
-            </div>
+            </CardHeader>
             <div className="flex-1 relative">
               <textarea
                 value={inputMode === 'json' ? jsonText : syntaxText}
                 onChange={(e) => inputMode === 'json' ? setJsonText(e.target.value) : setSyntaxText(e.target.value)}
                 className={cn(
-                  "w-full h-full p-4 font-mono text-sm resize-none focus:outline-none",
-                  parseError && "border-2 border-red-300"
+                  "w-full h-full p-5 font-mono text-sm resize-none focus:outline-none bg-transparent",
+                  parseError && "border-2 border-red-300 rounded-lg"
                 )}
                 placeholder={inputMode === 'json' ? '输入 JSON 配置...' : '输入 Infographic 语法...'}
                 spellCheck={false}
               />
               {parseError && (
-                <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-red-50 text-red-600 text-sm border-t border-red-200">
+                <div className="absolute bottom-0 left-0 right-0 px-5 py-3 bg-red-50 text-red-600 text-sm border-t border-red-200">
                   {parseError}
                 </div>
               )}
             </div>
-            <div className="px-4 py-2 border-t border-neutral-100 bg-neutral-50 text-xs text-neutral-500">
-              可用模板: {AVAILABLE_TEMPLATES.length} 个
+            <div className="px-5 py-2.5 border-t border-[var(--border)] bg-[var(--muted)]/30">
+              <span className="text-xs text-[var(--muted-foreground)] font-mono">
+                可用模板: {AVAILABLE_TEMPLATES.length} 个
+              </span>
             </div>
-          </div>
+          </Card>
 
           {/* Preview Panel */}
-          <div className="flex flex-col bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between">
-              <h3 className="font-medium text-neutral-800">预览 (可编辑)</h3>
+          <Card className="flex flex-col overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between py-3">
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-xs text-neutral-400">
-                  <span>SVG:</span>
-                  <button
-                    onClick={handleViewSvgSource}
-                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
-                    title="查看源码"
-                  >
+                <h3 className="font-semibold text-[var(--foreground)]">预览</h3>
+                <Badge variant="accent" className="text-[10px] py-0.5 px-2">可编辑</Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[var(--muted-foreground)] font-mono">SVG</span>
+                  <Button variant="ghost" size="sm" onClick={handleViewSvgSource} title="查看源码">
                     <Code size={16} />
-                  </button>
-                  <button
-                    onClick={handleCopySvg}
-                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
-                    title="复制"
-                  >
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleCopySvg} title="复制">
                     {svgCopied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                  </button>
-                  <button
-                    onClick={handleDownloadSvg}
-                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
-                    title="下载"
-                  >
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleDownloadSvg} title="下载">
                     <Download size={16} />
-                  </button>
+                  </Button>
                 </div>
-                <div className="w-px h-4 bg-neutral-200" />
-                <div className="flex items-center gap-1 text-xs text-neutral-400">
-                  <span>PNG:</span>
-                  <button
-                    onClick={handleCopyPng}
-                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
-                    title="复制"
-                  >
+                <div className="w-px h-5 bg-[var(--border)]" />
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[var(--muted-foreground)] font-mono">PNG</span>
+                  <Button variant="ghost" size="sm" onClick={handleCopyPng} title="复制">
                     {pngCopied ? <Check size={16} className="text-green-500" /> : <ClipboardCopy size={16} />}
-                  </button>
-                  <button
-                    onClick={handleDownloadPng}
-                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
-                    title="下载"
-                  >
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleDownloadPng} title="下载">
                     <FileImage size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
-            <div className="flex-1 p-4 overflow-auto relative">
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto relative">
               <div
                 id={containerId}
                 className="w-full h-full flex items-center justify-center"
               />
               {renderError && (
-                <div className="absolute inset-4 flex items-center justify-center bg-red-50 text-red-600 text-sm rounded-lg p-4 text-center">
+                <div className="absolute inset-4 flex items-center justify-center bg-red-50 text-red-600 text-sm rounded-xl p-4 text-center">
                   {renderError}
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* SVG Source Modal */}
       {showSvgSource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSvgSource(false)}>
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-              <h3 className="font-medium text-neutral-800">SVG 源码</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowSvgSource(false)}>
+          <Card className="max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <h3 className="font-semibold text-[var(--foreground)]">SVG 源码</h3>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={async () => {
                     await navigator.clipboard.writeText(svgSource);
                     setSvgCopied(true);
                     setTimeout(() => setSvgCopied(false), 2000);
                   }}
-                  className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
                 >
                   {svgCopied ? '已复制' : '复制'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowSvgSource(false)}
-                  className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
                 >
-                  ✕
-                </button>
+                  <X size={18} />
+                </Button>
               </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <pre className="text-xs font-mono text-neutral-700 whitespace-pre-wrap break-all">
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto">
+              <pre className="text-xs font-mono text-[var(--muted-foreground)] whitespace-pre-wrap break-all bg-[var(--muted)] p-4 rounded-lg">
                 {svgSource}
               </pre>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* AI Prompt Modal */}
       {showPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowPrompt(false)}>
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-purple-600" />
-                <h3 className="font-medium text-neutral-800">AI 信息图生成提示词</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPrompt(false)}>
+          <Card className="max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 gradient-bg rounded-lg">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <h3 className="font-semibold text-[var(--foreground)]">AI 信息图生成提示词</h3>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  size="sm"
                   onClick={handleCopyPrompt}
-                  className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
                 >
                   {promptCopied ? '已复制' : '复制提示词'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowPrompt(false)}
-                  className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
                 >
-                  ✕
-                </button>
+                  <X size={18} />
+                </Button>
               </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <div className="mb-4 p-3 bg-purple-50 rounded-lg text-sm text-purple-800">
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto">
+              <div className="mb-4 p-4 gradient-bg rounded-xl text-white text-sm">
                 💡 将此提示词复制到 ChatGPT、Claude 或其他 AI 工具中，然后描述你想要的信息图内容，AI 会生成 Infographic 语法代码。
               </div>
-              <pre className="text-xs font-mono text-neutral-700 whitespace-pre-wrap bg-neutral-50 p-4 rounded-lg">
+              <pre className="text-xs font-mono text-[var(--muted-foreground)] whitespace-pre-wrap bg-[var(--muted)] p-5 rounded-xl">
                 {AI_SYSTEM_PROMPT}
               </pre>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
+
+      {/* Decorative Elements */}
+      <div className="radial-glow w-80 h-80 -top-40 -right-40 fixed" />
+      <div className="radial-glow w-64 h-64 bottom-10 -left-32 fixed" />
     </div>
   );
 }
