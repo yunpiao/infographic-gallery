@@ -460,7 +460,11 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   // 默认使用语法模式
   const [inputMode, setInputMode] = useState<InputMode>('syntax');
   const [jsonText, setJsonText] = useState(JSON.stringify(initialConfig || DEFAULT_CONFIG, null, 2));
-  const [syntaxText, setSyntaxText] = useState(DEFAULT_SYNTAX);
+  const [syntaxText, setSyntaxText] = useState(() =>
+    initialConfig
+      ? configToSyntax(initialConfig, initialTheme || 'light')
+      : DEFAULT_SYNTAX
+  );
   const [parseError, setParseError] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState(initialTheme || 'light');
