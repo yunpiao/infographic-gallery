@@ -160,7 +160,8 @@ const EXAMPLE_CONFIGS: { name: string; config: InfographicOptions }[] = [
 ];
 
 const THEMES = ['light', 'dark', 'hand-drawn'];
-const STYLIZE_OPTIONS = ['none', 'rough', 'pattern', 'linear-gradient', 'radial-gradient'] as const;
+// @antv/infographic 0.2.x only supports 'rough' stylize
+const STYLIZE_OPTIONS = ['none', 'rough'] as const;
 type StylizeType = typeof STYLIZE_OPTIONS[number];
 
 // 语法骨架作为 placeholder
@@ -240,7 +241,7 @@ theme dark              # 可选: light(默认), dark, hand-drawn
     - #61DDAA
     - #F6BD16
     - #F08BB4
-  stylize rough         # 可选: rough(手绘), pattern(图案), linear-gradient
+  stylize rough         # 可选: rough(手绘风格)
   base
     text
       font-family 851tegakizatsu  # 手绘风格字体
@@ -498,9 +499,9 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
         editable: true,
       };
 
-      // Add stylize option if not 'none'
+      // Add stylize option if not 'none' (only 'rough' is supported in 0.2.x)
       if (stylize !== 'none') {
-        options.stylize = { type: stylize };
+        options.stylize = stylize;
       }
 
       const instance = new Infographic(options);
