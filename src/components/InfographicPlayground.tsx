@@ -27,6 +27,46 @@ interface PlaygroundProps {
 
 const AVAILABLE_TEMPLATES = getTemplates();
 
+// 将 InfographicOptions 转换为 syntax 格式
+function configToSyntax(config: InfographicOptions, theme: string = 'light'): string {
+  const lines: string[] = [];
+
+  lines.push(`infographic ${config.template}`);
+  lines.push('data');
+
+  if (config.data) {
+    if (config.data.title) {
+      lines.push(`  title ${config.data.title}`);
+    }
+    if (config.data.desc) {
+      lines.push(`  desc ${config.data.desc}`);
+    }
+    if (config.data.items && Array.isArray(config.data.items)) {
+      lines.push('  items');
+      for (const item of config.data.items) {
+        lines.push(`    - label ${item.label || ''}`);
+        if (item.desc) lines.push(`      desc ${item.desc}`);
+        if (item.value !== undefined) lines.push(`      value ${item.value}`);
+        if (item.icon) lines.push(`      icon ${item.icon}`);
+        // 处理 children（如 SWOT）
+        if (item.children && Array.isArray(item.children)) {
+          lines.push('      children');
+          for (const child of item.children) {
+            lines.push(`        - label ${child.label || ''}`);
+            if (child.desc) lines.push(`          desc ${child.desc}`);
+            if (child.value !== undefined) lines.push(`          value ${child.value}`);
+          }
+        }
+      }
+    }
+  }
+
+  lines.push('theme');
+  lines.push(`  type ${theme}`);
+
+  return lines.join('\n');
+}
+
 const DEFAULT_CONFIG: InfographicOptions = {
   width: 600,
   height: 400,
@@ -120,6 +160,8 @@ const EXAMPLE_CONFIGS: { name: string; config: InfographicOptions }[] = [
 ];
 
 const THEMES = ['light', 'dark', 'hand-drawn'];
+const STYLIZE_OPTIONS = ['none', 'rough', 'pattern', 'linear-gradient', 'radial-gradient'] as const;
+type StylizeType = typeof STYLIZE_OPTIONS[number];
 
 // 语法骨架作为 placeholder
 const SYNTAX_PLACEHOLDER = `# 语法骨架示例
@@ -151,12 +193,13 @@ const AI_SYSTEM_PROMPT = `## 角色
 1. **仅输出** \`\`\`plain 代码块，禁止任何解释性文字
 2. **缩进** 2个空格，禁用 Tab
 3. **首行格式** \`infographic <template-name>\`
+4. **语言一致** 输出语言必须与用户输入语言一致
 
 ---
 
 ## 字段白名单（严格遵守）
 
-items 内**仅允许**以下 5 个字段，禁止臆造其他字段：
+items 内**仅允许**以下 6 个字段，禁止臆造其他字段：
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
@@ -164,6 +207,7 @@ items 内**仅允许**以下 5 个字段，禁止臆造其他字段：
 | desc | String | - | 描述/副标题 |
 | value | Number | - | **仅限数字**（用于图表类模板） |
 | icon | String | - | 图标名（格式 \`mdi/<name>\`） |
+| illus | String | - | 插图名（unDraw 插图，如 \`coding\`） |
 | children | Array | - | 子节点（用于层级/对比结构） |
 
 ### ⚠️ 禁止事项
@@ -175,6 +219,35 @@ items 内**仅允许**以下 5 个字段，禁止臆造其他字段：
 
 ---
 
+## 图标与插图资源
+
+**图标 (Iconify)**:
+- 格式: \`<collection>/<icon-name>\`，如 \`mdi/rocket-launch\`
+- 常用集合: \`mdi/*\`(Material Design), \`fa/*\`(Font Awesome), \`bi/*\`(Bootstrap)
+- 示例: \`mdi/code-tags\`, \`mdi/database\`, \`mdi/chart-line\`, \`mdi/account-group\`
+
+**插图 (unDraw)**:
+- 格式: 插图文件名（无.svg），如 \`coding\`, \`team-work\`, \`analytics\`
+- 适用于 \`*-illus\` 模板（如 \`sequence-timeline-simple-illus\`）
+
+---
+
+## 主题配置
+
+\`\`\`plain
+theme dark              # 可选: light(默认), dark, hand-drawn
+  palette
+    - #61DDAA
+    - #F6BD16
+    - #F08BB4
+  stylize rough         # 可选: rough(手绘), pattern(图案), linear-gradient
+  base
+    text
+      font-family 851tegakizatsu  # 手绘风格字体
+\`\`\`
+
+---
+
 ## 模板决策树
 
 \`\`\`
@@ -182,51 +255,69 @@ items 内**仅允许**以下 5 个字段，禁止臆造其他字段：
 │
 ├─ 有先后顺序？ → 流程类
 │   ├─ 闭环循环 → sequence-circular-simple
-│   ├─ 漏斗筛选 → sequence-filter-mesh-simple
+│   ├─ 漏斗筛选 → sequence-funnel-simple ⭐新
+│   ├─ 金字塔   → sequence-pyramid-simple
 │   ├─ 阶梯递进 → sequence-ascending-steps
-│   ├─ 时间线   → sequence-roadmap-vertical-simple
+│   ├─ 时间线   → sequence-timeline-simple / sequence-roadmap-vertical-simple
+│   ├─ 蛇形步骤 → sequence-snake-steps-simple
 │   └─ 线性步骤 → sequence-zigzag-steps-underline-text
 │
 ├─ 有父子层级？ → 层级类
-│   ├─ 金字塔型 → sequence-pyramid-simple
 │   ├─ 技术架构 → hierarchy-tree-tech-style-capsule-item
-│   └─ 组织结构 → hierarchy-tree-curved-line-rounded-rect-node
+│   ├─ 组织结构 → hierarchy-tree-curved-line-rounded-rect-node
+│   └─ 层级结构 → hierarchy-structure
 │
 ├─ 是 A vs B？ → 对比类
 │   ├─ SWOT分析 → compare-swot
-│   ├─ 四象限   → quadrant-quarter-simple-card
+│   ├─ 四象限   → quadrant-quarter-simple-card / quadrant-quarter-circular
 │   └─ 二元对比 → compare-binary-horizontal-simple-fold
 │
-├─ 有数值统计？ → 图表类（此时 value 必填且为数字）
+├─ 有数值统计？ → 图表类（value 必填且为数字）
 │   ├─ 占比分布 → chart-pie-donut-pill-badge
 │   ├─ 趋势变化 → chart-line-plain-text
-│   └─ 数量对比 → chart-column-simple
+│   ├─ 柱状对比 → chart-column-simple
+│   └─ 词云     → chart-wordcloud
+│
+├─ 关系展示？ → 关系类
+│   └─ 圆形关系 → relation-circle-icon-badge
 │
 └─ 平铺枚举？ → 列表类
     ├─ 有推导关系 → list-row-horizontal-icon-arrow
-    ├─ 卡片展示   → list-grid-badge-card
-    └─ 扇形发散   → list-sector-plain-text
+    ├─ 卡片展示   → list-grid-badge-card / list-grid-candy-card-lite
+    ├─ 扇形发散   → list-sector-plain-text
+    └─ 待办列表   → list-column-done-list
 \`\`\`
 
 ---
 
-## 模板列表
+## 完整模板列表
 
-流程: sequence-zigzag-steps-underline-text, sequence-horizontal-zigzag-underline-text, sequence-circular-simple, sequence-filter-mesh-simple, sequence-mountain-underline-text, sequence-cylinders-3d-simple, sequence-ascending-steps, sequence-color-snake-steps-horizontal-icon-line, sequence-pyramid-simple, sequence-roadmap-vertical-simple, sequence-zigzag-pucks-3d-simple, sequence-ascending-stairs-3d-underline-text
+**流程 (sequence-*)**:
+sequence-zigzag-steps-underline-text, sequence-horizontal-zigzag-underline-text, sequence-horizontal-zigzag-simple-illus, sequence-circular-simple, sequence-filter-mesh-simple, sequence-mountain-underline-text, sequence-cylinders-3d-simple, sequence-color-snake-steps-horizontal-icon-line, sequence-pyramid-simple, sequence-funnel-simple, sequence-roadmap-vertical-simple, sequence-roadmap-vertical-plain-text, sequence-zigzag-pucks-3d-simple, sequence-ascending-steps, sequence-ascending-stairs-3d-underline-text, sequence-snake-steps-compact-card, sequence-snake-steps-underline-text, sequence-snake-steps-simple, sequence-stairs-front-compact-card, sequence-stairs-front-pill-badge, sequence-timeline-simple, sequence-timeline-rounded-rect-node, sequence-timeline-simple-illus
 
-对比: compare-binary-horizontal-simple-fold, compare-hierarchy-left-right-circle-node-pill-badge, compare-swot, compare-binary-horizontal-badge-card-arrow, compare-binary-horizontal-underline-text-vs, quadrant-quarter-simple-card, quadrant-quarter-circular
+**对比 (compare-*)**:
+compare-binary-horizontal-simple-fold, compare-hierarchy-left-right-circle-node-pill-badge, compare-swot, compare-binary-horizontal-badge-card-arrow, compare-binary-horizontal-underline-text-vs
 
-层级: hierarchy-tree-tech-style-capsule-item, hierarchy-tree-curved-line-rounded-rect-node, hierarchy-tree-tech-style-badge-card
+**象限 (quadrant-*)**:
+quadrant-quarter-simple-card, quadrant-quarter-circular, quadrant-simple-illus
 
-列表: list-grid-badge-card, list-grid-candy-card-lite, list-grid-ribbon-card, list-row-horizontal-icon-arrow, list-sector-plain-text, relation-circle-icon-badge
+**关系 (relation-*)**:
+relation-circle-icon-badge, relation-circle-circular-progress
 
-图表: chart-column-simple, chart-bar-plain-text, chart-line-plain-text, chart-pie-plain-text, chart-pie-compact-card, chart-pie-donut-plain-text, chart-pie-donut-pill-badge
+**层级 (hierarchy-*)**:
+hierarchy-tree-tech-style-capsule-item, hierarchy-tree-curved-line-rounded-rect-node, hierarchy-tree-tech-style-badge-card, hierarchy-structure
+
+**图表 (chart-*)**:
+chart-column-simple, chart-bar-plain-text, chart-line-plain-text, chart-pie-plain-text, chart-pie-compact-card, chart-pie-donut-plain-text, chart-pie-donut-pill-badge, chart-wordcloud
+
+**列表 (list-*)**:
+list-grid-badge-card, list-grid-candy-card-lite, list-grid-ribbon-card, list-row-horizontal-icon-arrow, list-row-simple-illus, list-sector-plain-text, list-column-done-list, list-column-vertical-icon-arrow, list-column-simple-vertical-arrow, list-zigzag-down-compact-card, list-zigzag-down-simple, list-zigzag-up-compact-card, list-zigzag-up-simple
 
 ---
 
 ## 正确示例
 
-### 流程图（无 value）
+### 流程图（带图标）
 \`\`\`plain
 infographic sequence-zigzag-steps-underline-text
 data
@@ -259,20 +350,65 @@ data
 
 ### 对比（使用 children）
 \`\`\`plain
-infographic compare-binary-horizontal-simple-fold
+infographic compare-swot
 data
-  title 框架对比
+  title SWOT 战略分析
   items
-    - label React
+    - label Strengths
       children
-        - label 高灵活性
-          desc 函数式编程
-        - label 学习曲线陡
-    - label Vue
+        - label 技术领先
+        - label 品牌优势
+    - label Weaknesses
       children
-        - label 易于上手
-          desc 模板语法直观
-        - label 生态相对较小
+        - label 成本较高
+        - label 覆盖有限
+    - label Opportunities
+      children
+        - label 市场增长
+        - label 政策利好
+    - label Threats
+      children
+        - label 竞争加剧
+        - label 技术变革
+\`\`\`
+
+### 带插图的时间线
+\`\`\`plain
+infographic sequence-timeline-simple-illus
+data
+  title 产品开发阶段
+  items
+    - label 调研
+      desc 了解用户需求
+      illus user-research
+    - label 设计
+      desc 创建用户体验
+      illus design-thinking
+    - label 开发
+      desc 构建产品
+      illus coding
+    - label 发布
+      desc 推向市场
+      illus launch-day
+\`\`\`
+
+### 深色主题 + 自定义配色
+\`\`\`plain
+infographic list-row-horizontal-icon-arrow
+theme dark
+  palette
+    - #61DDAA
+    - #F6BD16
+    - #F08BB4
+data
+  title 工作流程
+  items
+    - label 步骤一
+      desc 开始
+    - label 步骤二
+      desc 进行中
+    - label 步骤三
+      desc 完成
 \`\`\`
 
 ---
@@ -327,6 +463,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const [parseError, setParseError] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState(initialTheme || 'light');
+  const [selectedStylize, setSelectedStylize] = useState<StylizeType>('none');
   const [copied, setCopied] = useState(false);
   const [svgCopied, setSvgCopied] = useState(false);
   const [showSvgSource, setShowSvgSource] = useState(false);
@@ -339,7 +476,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const [containerId] = useState(() => `playground-${Math.random().toString(36).slice(2)}`);
   const instanceRef = useRef<Infographic | null>(null);
 
-  const renderInfographic = useCallback((config: InfographicOptions, theme: string) => {
+  const renderInfographic = useCallback((config: InfographicOptions, theme: string, stylize: StylizeType) => {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -350,7 +487,8 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
     setRenderError(null);
 
     try {
-      const instance = new Infographic({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const options: any = {
         container: `#${containerId}`,
         width: config.width || 600,
         height: config.height || 400,
@@ -358,7 +496,14 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
         theme,
         data: config.data,
         editable: true,
-      });
+      };
+
+      // Add stylize option if not 'none'
+      if (stylize !== 'none') {
+        options.stylize = { type: stylize };
+      }
+
+      const instance = new Infographic(options);
 
       instance.on('error', (err: Error | Error[]) => {
         const msg = Array.isArray(err) ? err.map(e => e.message).join('; ') : err.message;
@@ -388,11 +533,11 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
         config = JSON.parse(jsonText) as InfographicOptions;
       }
 
-      renderInfographic(config, selectedTheme);
+      renderInfographic(config, selectedTheme, selectedStylize);
     } catch (err) {
       setParseError(err instanceof Error ? err.message : '解析失败');
     }
-  }, [jsonText, syntaxText, inputMode, selectedTheme, renderInfographic]);
+  }, [jsonText, syntaxText, inputMode, selectedTheme, selectedStylize, renderInfographic]);
 
   const handleReset = useCallback(() => {
     setJsonText(JSON.stringify(DEFAULT_CONFIG, null, 2));
@@ -406,9 +551,13 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   }, [jsonText]);
 
   const handleExampleSelect = useCallback((config: InfographicOptions) => {
-    setJsonText(JSON.stringify(config, null, 2));
+    if (inputMode === 'json') {
+      setJsonText(JSON.stringify(config, null, 2));
+    } else {
+      setSyntaxText(configToSyntax(config, selectedTheme));
+    }
     setParseError(null);
-  }, []);
+  }, [inputMode, selectedTheme]);
 
   const getSvgElement = useCallback(() => {
     const container = document.getElementById(containerId);
@@ -487,7 +636,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jsonText, syntaxText, inputMode, selectedTheme]);
+  }, [jsonText, syntaxText, inputMode, selectedTheme, selectedStylize]);
 
   useEffect(() => {
     return () => {
@@ -541,6 +690,18 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
               >
                 {THEMES.map((theme) => (
                   <option key={theme} value={theme}>{theme}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--muted-foreground)]">风格</span>
+              <select
+                value={selectedStylize}
+                onChange={(e) => setSelectedStylize(e.target.value as StylizeType)}
+                className="h-9 px-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--card)] focus-ring transition-all hover:border-[var(--accent)]/30"
+              >
+                {STYLIZE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt === 'none' ? '无' : opt}</option>
                 ))}
               </select>
             </div>
