@@ -13,6 +13,8 @@ import {
   ClipboardCopy,
   X,
   ArrowLeft,
+  HelpCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, Card, CardHeader, CardContent, Badge } from '@/components/ui';
@@ -119,87 +121,179 @@ const EXAMPLE_CONFIGS: { name: string; config: InfographicOptions }[] = [
 
 const THEMES = ['light', 'dark', 'hand-drawn'];
 
-const AI_SYSTEM_PROMPT = `## 角色说明
-
-你是一个专业的信息图生成助手，熟悉 AntV Infographic 语法（形如 Mermaid 的文本语法）。当用户给出内容或需求时，你需要：
-1. 提炼关键信息结构（标题、描述、条目、层级、指标等）
-2. 结合语义选择合适的模板（template）与主题
-3. 将内容用规范的 Infographic 语法描述，方便实时流式渲染
-
-## 输出格式
-
-始终使用纯语法文本，外层包裹 \`\`\`plain 代码块，不得输出解释性文字。语法结构示例：
-
-\`\`\`plain
-infographic list-row-horizontal-icon-arrow
+// 语法骨架作为 placeholder
+const SYNTAX_PLACEHOLDER = `# 语法骨架示例
+infographic <模板名>
 data
   title 标题
-  desc 描述
+  desc 描述（可选）
   items
-    - label 条目
-      value 12.5
+    - label 项目名
       desc 说明
-      icon mdi/rocket-launch
+      icon mdi/图标名
+      value 数值（图表类用）
+      children（层级用）
+        - label 子项
 theme
-  palette #3b82f6 #8b5cf6 #f97316
+  palette #3b82f6 #10b981
+
+# 可用字段：label, desc, value, icon, children
+# value 只能是数字，不能是字符串！`;
+
+const AI_SYSTEM_PROMPT = `## 角色
+
+你是 AntV Infographic DSL 编译器，将自然语言转换为信息图语法代码。
+
+---
+
+## 输出规则（最高优先级）
+
+1. **仅输出** \`\`\`plain 代码块，禁止任何解释性文字
+2. **缩进** 2个空格，禁用 Tab
+3. **首行格式** \`infographic <template-name>\`
+
+---
+
+## 字段白名单（严格遵守）
+
+items 内**仅允许**以下 5 个字段，禁止臆造其他字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| label | String | ✅ | 标题/名称 |
+| desc | String | - | 描述/副标题 |
+| value | Number | - | **仅限数字**（用于图表类模板） |
+| icon | String | - | 图标名（格式 \`mdi/<name>\`） |
+| children | Array | - | 子节点（用于层级/对比结构） |
+
+### ⚠️ 禁止事项
+
+- ❌ \`value status\` → value 只能是数字如 \`value 100\`
+- ❌ \`status 完成\` → status 字段不存在
+- ❌ \`color #ff0000\` → color 字段不存在，颜色用 theme.palette
+- ❌ \`id 1\` / \`type xxx\` → 这些字段都不存在
+
+---
+
+## 模板决策树
+
+\`\`\`
+数据结构是什么？
+│
+├─ 有先后顺序？ → 流程类
+│   ├─ 闭环循环 → sequence-circular-simple
+│   ├─ 漏斗筛选 → sequence-filter-mesh-simple
+│   ├─ 阶梯递进 → sequence-ascending-steps
+│   ├─ 时间线   → sequence-roadmap-vertical-simple
+│   └─ 线性步骤 → sequence-zigzag-steps-underline-text
+│
+├─ 有父子层级？ → 层级类
+│   ├─ 金字塔型 → sequence-pyramid-simple
+│   ├─ 技术架构 → hierarchy-tree-tech-style-capsule-item
+│   └─ 组织结构 → hierarchy-tree-curved-line-rounded-rect-node
+│
+├─ 是 A vs B？ → 对比类
+│   ├─ SWOT分析 → compare-swot
+│   ├─ 四象限   → quadrant-quarter-simple-card
+│   └─ 二元对比 → compare-binary-horizontal-simple-fold
+│
+├─ 有数值统计？ → 图表类（此时 value 必填且为数字）
+│   ├─ 占比分布 → chart-pie-donut-pill-badge
+│   ├─ 趋势变化 → chart-line-plain-text
+│   └─ 数量对比 → chart-column-simple
+│
+└─ 平铺枚举？ → 列表类
+    ├─ 有推导关系 → list-row-horizontal-icon-arrow
+    ├─ 卡片展示   → list-grid-badge-card
+    └─ 扇形发散   → list-sector-plain-text
 \`\`\`
 
-## 语法要点
+---
 
-- 第一行以 \`infographic <template-name>\` 开头，模板从下方列表中选择
-- 使用 block 描述 data / theme，层级通过两个空格缩进
-- 键值对使用「键 值」形式，数组通过 \`-\` 分项
-- icon 值直接提供关键词或图标名（如 \`mdi/chart-line\`）
-- data 应包含 title/desc/items（根据语义可省略不必要字段）
-- data.items 可包含 label(string)/value(number)/desc(string)/icon(string)/children(object) 等字段，children 表示层级结构
-- 对比类模板（名称以 \`compare-\` 开头）应构建两个根节点，所有对比项作为这两个根节点的 children，确保结构清晰
-- 可以添加 theme 来切换色板或深浅色；
-- 严禁输出 JSON、Markdown、解释或额外文本
+## 模板列表
 
-## 模板 (template)
+流程: sequence-zigzag-steps-underline-text, sequence-horizontal-zigzag-underline-text, sequence-circular-simple, sequence-filter-mesh-simple, sequence-mountain-underline-text, sequence-cylinders-3d-simple, sequence-ascending-steps, sequence-color-snake-steps-horizontal-icon-line, sequence-pyramid-simple, sequence-roadmap-vertical-simple, sequence-zigzag-pucks-3d-simple, sequence-ascending-stairs-3d-underline-text
 
-- sequence-zigzag-steps-underline-text
-- sequence-horizontal-zigzag-underline-text
-- sequence-circular-simple
-- sequence-filter-mesh-simple
-- sequence-mountain-underline-text
-- sequence-cylinders-3d-simple
-- compare-binary-horizontal-simple-fold
-- compare-hierarchy-left-right-circle-node-pill-badge
-- quadrant-quarter-simple-card
-- quadrant-quarter-circular
-- list-grid-badge-card
-- list-grid-candy-card-lite
-- list-grid-ribbon-card
-- list-row-horizontal-icon-arrow
-- relation-circle-icon-badge
-- sequence-ascending-steps
-- compare-swot
-- sequence-color-snake-steps-horizontal-icon-line
-- sequence-pyramid-simple
-- list-sector-plain-text
-- sequence-roadmap-vertical-simple
-- sequence-zigzag-pucks-3d-simple
-- sequence-ascending-stairs-3d-underline-text
-- compare-binary-horizontal-badge-card-arrow
-- compare-binary-horizontal-underline-text-vs
-- hierarchy-tree-tech-style-capsule-item
-- hierarchy-tree-curved-line-rounded-rect-node
-- hierarchy-tree-tech-style-badge-card
-- chart-column-simple
-- chart-bar-plain-text
-- chart-line-plain-text
-- chart-pie-plain-text
-- chart-pie-compact-card
-- chart-pie-donut-plain-text
-- chart-pie-donut-pill-badge
+对比: compare-binary-horizontal-simple-fold, compare-hierarchy-left-right-circle-node-pill-badge, compare-swot, compare-binary-horizontal-badge-card-arrow, compare-binary-horizontal-underline-text-vs, quadrant-quarter-simple-card, quadrant-quarter-circular
 
-## 注意事项
+层级: hierarchy-tree-tech-style-capsule-item, hierarchy-tree-curved-line-rounded-rect-node, hierarchy-tree-tech-style-badge-card
 
-- 输出必须符合语法规范与缩进规则，方便模型流式输出
-- 结合用户输入给出结构化 data，勿编造无关内容
-- 如用户指定风格/色彩/语气，可在 theme 中体现
-- 若信息不足，可合理假设补全，但要保持连贯与可信
+列表: list-grid-badge-card, list-grid-candy-card-lite, list-grid-ribbon-card, list-row-horizontal-icon-arrow, list-sector-plain-text, relation-circle-icon-badge
+
+图表: chart-column-simple, chart-bar-plain-text, chart-line-plain-text, chart-pie-plain-text, chart-pie-compact-card, chart-pie-donut-plain-text, chart-pie-donut-pill-badge
+
+---
+
+## 正确示例
+
+### 流程图（无 value）
+\`\`\`plain
+infographic sequence-zigzag-steps-underline-text
+data
+  title 用户注册流程
+  items
+    - label 输入手机号
+      desc 填写11位号码
+      icon mdi/cellphone
+    - label 验证码校验
+      desc 输入短信验证码
+      icon mdi/message
+    - label 注册完成
+      icon mdi/check-circle
+\`\`\`
+
+### 图表（value 必须是数字）
+\`\`\`plain
+infographic chart-column-simple
+data
+  title Q3 销售额
+  desc 单位：万元
+  items
+    - label 北京
+      value 320
+    - label 上海
+      value 280
+    - label 广州
+      value 195
+\`\`\`
+
+### 对比（使用 children）
+\`\`\`plain
+infographic compare-binary-horizontal-simple-fold
+data
+  title 框架对比
+  items
+    - label React
+      children
+        - label 高灵活性
+          desc 函数式编程
+        - label 学习曲线陡
+    - label Vue
+      children
+        - label 易于上手
+          desc 模板语法直观
+        - label 生态相对较小
+\`\`\`
+
+---
+
+## 错误示例（禁止模仿）
+
+\`\`\`plain
+# ❌ 错误：value 使用了字符串
+- label 报错字段
+  value status        # 错误！value 只能是数字
+
+# ❌ 错误：使用了不存在的字段
+- label 任务
+  status 完成         # 错误！status 字段不存在
+  priority high       # 错误！priority 字段不存在
+
+# ✅ 正确：只用白名单字段
+- label 任务
+  desc 已完成
+  icon mdi/check
+\`\`\`
 `;
 
 type InputMode = 'json' | 'syntax';
@@ -226,7 +320,8 @@ theme
 `;
 
 export function InfographicPlayground({ onBack, initialConfig, initialTheme }: PlaygroundProps) {
-  const [inputMode, setInputMode] = useState<InputMode>('json');
+  // 默认使用语法模式
+  const [inputMode, setInputMode] = useState<InputMode>('syntax');
   const [jsonText, setJsonText] = useState(JSON.stringify(initialConfig || DEFAULT_CONFIG, null, 2));
   const [syntaxText, setSyntaxText] = useState(DEFAULT_SYNTAX);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -238,6 +333,8 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const [svgSource, setSvgSource] = useState('');
   const [promptCopied, setPromptCopied] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showSyntaxHelp, setShowSyntaxHelp] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const [containerId] = useState(() => `playground-${Math.random().toString(36).slice(2)}`);
   const instanceRef = useRef<Infographic | null>(null);
@@ -357,7 +454,6 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
     }
   }, []);
 
-  const [pngCopied, setPngCopied] = useState(false);
   const handleCopyPng = useCallback(async () => {
     if (!instanceRef.current) return;
     try {
@@ -367,8 +463,6 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': blob })
       ]);
-      setPngCopied(true);
-      setTimeout(() => setPngCopied(false), 2000);
     } catch (err) {
       console.error('PNG copy failed:', err);
     }
@@ -469,9 +563,9 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 h-[calc(100vh-220px)]">
+        <div className="grid lg:grid-cols-2 gap-6 h-auto lg:h-[calc(100vh-220px)]">
           {/* Editor Panel */}
-          <Card className="flex flex-col overflow-hidden">
+          <Card className="flex flex-col overflow-hidden min-h-[400px] lg:min-h-0">
             <CardHeader className="flex flex-row items-center justify-between py-3">
               <div className="flex items-center gap-2">
                 <button
@@ -496,6 +590,15 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
                 >
                   语法
                 </button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSyntaxHelp(true)}
+                  title="语法帮助"
+                  className="ml-1"
+                >
+                  <HelpCircle size={16} />
+                </Button>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -532,7 +635,7 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
                   "w-full h-full p-5 font-mono text-sm resize-none focus:outline-none bg-transparent",
                   parseError && "border-2 border-red-300 rounded-lg"
                 )}
-                placeholder={inputMode === 'json' ? '输入 JSON 配置...' : '输入 Infographic 语法...'}
+                placeholder={inputMode === 'json' ? '输入 JSON 配置...' : SYNTAX_PLACEHOLDER}
                 spellCheck={false}
               />
               {parseError && (
@@ -549,35 +652,46 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
           </Card>
 
           {/* Preview Panel */}
-          <Card className="flex flex-col overflow-hidden">
+          <Card className="flex flex-col overflow-hidden min-h-[400px] lg:min-h-0">
             <CardHeader className="flex flex-row items-center justify-between py-3">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-[var(--foreground)]">预览</h3>
                 <Badge variant="accent" className="text-[10px] py-0.5 px-2">可编辑</Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-[var(--muted-foreground)] font-mono">SVG</span>
-                  <Button variant="ghost" size="sm" onClick={handleViewSvgSource} title="查看源码">
-                    <Code size={16} />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleCopySvg} title="复制">
-                    {svgCopied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleDownloadSvg} title="下载">
-                    <Download size={16} />
-                  </Button>
-                </div>
-                <div className="w-px h-5 bg-[var(--border)]" />
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-[var(--muted-foreground)] font-mono">PNG</span>
-                  <Button variant="ghost" size="sm" onClick={handleCopyPng} title="复制">
-                    {pngCopied ? <Check size={16} className="text-green-500" /> : <ClipboardCopy size={16} />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleDownloadPng} title="下载">
-                    <FileImage size={16} />
-                  </Button>
-                </div>
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="gap-1.5"
+                >
+                  <Download size={14} />
+                  导出
+                  <ChevronDown size={14} className={cn("transition-transform", showExportMenu && "rotate-180")} />
+                </Button>
+                {showExportMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg py-1 min-w-[140px]">
+                      <button onClick={() => { handleViewSvgSource(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
+                        <Code size={14} /> 查看 SVG 源码
+                      </button>
+                      <button onClick={() => { handleCopySvg(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
+                        <Copy size={14} /> 复制 SVG
+                      </button>
+                      <button onClick={() => { handleDownloadSvg(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
+                        <Download size={14} /> 下载 SVG
+                      </button>
+                      <div className="border-t border-[var(--border)] my-1" />
+                      <button onClick={() => { handleCopyPng(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
+                        <ClipboardCopy size={14} /> 复制 PNG
+                      </button>
+                      <button onClick={() => { handleDownloadPng(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
+                        <FileImage size={14} /> 下载 PNG
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto relative">
@@ -665,6 +779,68 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
               <pre className="text-xs font-mono text-[var(--muted-foreground)] whitespace-pre-wrap bg-[var(--muted)] p-5 rounded-xl">
                 {AI_SYSTEM_PROMPT}
               </pre>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Syntax Help Modal */}
+      {showSyntaxHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowSyntaxHelp(false)}>
+          <Card className="max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <HelpCircle size={16} className="text-white" />
+                </div>
+                <h3 className="font-semibold text-[var(--foreground)]">Infographic 语法速查</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSyntaxHelp(false)}
+              >
+                <X size={18} />
+              </Button>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm">
+                <strong>基本结构：</strong>类似 YAML，使用 2 空格缩进，键值用空格分隔
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">📋 字段白名单（items 内仅支持）</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="p-2 bg-[var(--muted)] rounded"><code>label</code> - 标题（必填）</div>
+                  <div className="p-2 bg-[var(--muted)] rounded"><code>desc</code> - 描述</div>
+                  <div className="p-2 bg-[var(--muted)] rounded"><code>value</code> - 数值（仅限数字！）</div>
+                  <div className="p-2 bg-[var(--muted)] rounded"><code>icon</code> - 图标 mdi/xxx</div>
+                  <div className="p-2 bg-[var(--muted)] rounded col-span-2"><code>children</code> - 子节点（用于层级结构）</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">⚠️ 常见错误</h4>
+                <div className="text-sm space-y-1 text-red-600">
+                  <div>❌ <code>value status</code> → value 只能是数字</div>
+                  <div>❌ <code>status 完成</code> → status 字段不存在</div>
+                  <div>❌ <code>color #ff0000</code> → 颜色用 theme.palette</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">✅ 正确示例</h4>
+                <pre className="text-xs font-mono bg-[var(--muted)] p-3 rounded-lg overflow-x-auto">{`infographic sequence-zigzag-steps-underline-text
+data
+  title 流程标题
+  items
+    - label 步骤一
+      desc 说明文字
+      icon mdi/check
+    - label 步骤二
+theme
+  palette #3b82f6 #10b981`}</pre>
+              </div>
             </CardContent>
           </Card>
         </div>

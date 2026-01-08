@@ -302,42 +302,44 @@ export function InfographicGallery({ onNavigateToPlayground }: Omit<GalleryProps
           </Badge>
         </div>
 
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={cn(
-                'group flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-                activeCategory === cat.key
-                  ? 'gradient-bg text-white shadow-[var(--shadow-accent)] -translate-y-0.5'
-                  : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)] hover:shadow-sm'
-              )}
-            >
-              <span className={cn(
-                'transition-transform duration-200',
-                activeCategory !== cat.key && 'group-hover:scale-110'
-              )}>
-                {cat.icon}
-              </span>
-              <span>{cat.name}</span>
-              <span className={cn(
-                'px-2 py-0.5 rounded-full text-xs',
-                activeCategory === cat.key
-                  ? 'bg-white/20'
-                  : 'bg-[var(--muted)]'
-              )}>
-                {CATEGORIZED_TEMPLATES[cat.key].length}
-              </span>
-            </button>
-          ))}
+        {/* Category Tabs - Sticky & Scrollable */}
+        <div className="sticky top-[72px] z-10 -mx-6 px-6 py-4 bg-[var(--background)]/95 backdrop-blur-sm border-b border-[var(--border)] mb-8 transition-all supports-[backdrop-filter]:bg-[var(--background)]/60">
+          <div className="flex overflow-x-auto gap-3 pb-1 no-scrollbar items-center">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className={cn(
+                  'group flex-shrink-0 flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap',
+                  activeCategory === cat.key
+                    ? 'gradient-bg text-white shadow-[var(--shadow-accent)] scale-105'
+                    : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)] hover:shadow-sm'
+                )}
+              >
+                <span className={cn(
+                  'transition-transform duration-200',
+                  activeCategory !== cat.key && 'group-hover:scale-110'
+                )}>
+                  {cat.icon}
+                </span>
+                <span>{cat.name}</span>
+                <span className={cn(
+                  'px-2 py-0.5 rounded-full text-xs transition-colors',
+                  activeCategory === cat.key
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[var(--muted)] text-[var(--muted-foreground)] group-hover:bg-[var(--muted)]/80'
+                )}>
+                  {CATEGORIZED_TEMPLATES[cat.key].length}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Category Description */}
-        <Card className="mb-8">
-          <CardContent className="flex items-center gap-4">
-            <div className="p-3 gradient-bg rounded-xl">
+        <Card className="mb-8 bg-gradient-to-r from-[var(--card)] to-[var(--background)] border-none shadow-none">
+          <CardContent className="flex items-center gap-4 p-0">
+            <div className="p-3 gradient-bg rounded-xl shadow-sm">
               {activeInfo?.icon && (
                 <span className="text-white">{activeInfo.icon}</span>
               )}
@@ -354,36 +356,41 @@ export function InfographicGallery({ onNavigateToPlayground }: Omit<GalleryProps
         </Card>
 
         {/* Templates Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {currentTemplates.map((options, index) => (
             <Card
               key={`${activeCategory}-${index}-${selectedTheme}`}
               hover
-              className="group"
+              className="group border border-[var(--border)]/60 overflow-hidden"
             >
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between bg-transparent border-b-0 pb-0 pt-5 px-5">
                 <div>
                   <h3 className="font-semibold text-[var(--foreground)]">
                     {(options.data as { title?: string })?.title || `模板 ${index + 1}`}
                   </h3>
-                  <p className="text-xs font-mono text-[var(--muted-foreground)] mt-1">
+                  <p className="text-xs font-mono text-[var(--muted-foreground)] mt-1 opacity-70">
                     {options.template as string}
                   </p>
                 </div>
                 {onNavigateToPlayground && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => onNavigateToPlayground(options, selectedTheme)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
                   >
-                    <Pencil size={14} />
+                    <Pencil size={14} className="mr-1" />
                     编辑
                   </Button>
                 )}
               </CardHeader>
-              <CardContent style={{ minHeight: (Number(options.height) || 400) + 40 }}>
-                <InfographicRenderer options={options} theme={selectedTheme} />
+              <CardContent 
+                className="p-4"
+                style={{ minHeight: (Number(options.height) || 400) + 20 }}
+              >
+                <div className="rounded-lg overflow-hidden bg-[var(--muted)]/30 p-2 transition-colors group-hover:bg-[var(--muted)]/50">
+                   <InfographicRenderer options={options} theme={selectedTheme} />
+                </div>
               </CardContent>
             </Card>
           ))}
