@@ -14,7 +14,6 @@ import {
   X,
   ArrowLeft,
   HelpCircle,
-  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, Card, CardHeader, CardContent, Badge } from '@/components/ui';
@@ -476,7 +475,6 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
   const [promptCopied, setPromptCopied] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showSyntaxHelp, setShowSyntaxHelp] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const [containerId] = useState(() => `playground-${Math.random().toString(36).slice(2)}`);
   const instanceRef = useRef<Infographic | null>(null);
@@ -824,41 +822,6 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
                 <h3 className="font-semibold text-[var(--foreground)]">预览</h3>
                 <Badge variant="accent" className="text-[10px] py-0.5 px-2">可编辑</Badge>
               </div>
-              <div className="relative">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="gap-1.5"
-                >
-                  <Download size={14} />
-                  导出
-                  <ChevronDown size={14} className={cn("transition-transform", showExportMenu && "rotate-180")} />
-                </Button>
-                {showExportMenu && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg py-1 min-w-[140px]">
-                      <button onClick={() => { handleViewSvgSource(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
-                        <Code size={14} /> 查看 SVG 源码
-                      </button>
-                      <button onClick={() => { handleCopySvg(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
-                        <Copy size={14} /> 复制 SVG
-                      </button>
-                      <button onClick={() => { handleDownloadSvg(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
-                        <Download size={14} /> 下载 SVG
-                      </button>
-                      <div className="border-t border-[var(--border)] my-1" />
-                      <button onClick={() => { handleCopyPng(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
-                        <ClipboardCopy size={14} /> 复制 PNG
-                      </button>
-                      <button onClick={() => { handleDownloadPng(); setShowExportMenu(false); }} className="w-full px-3 py-2 text-sm text-left hover:bg-[var(--muted)] flex items-center gap-2">
-                        <FileImage size={14} /> 下载 PNG
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto relative">
               <div
@@ -871,6 +834,48 @@ export function InfographicPlayground({ onBack, initialConfig, initialTheme }: P
                 </div>
               )}
             </CardContent>
+            {/* Export Toolbar */}
+            <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--muted)]/30 flex items-center justify-between">
+              <span className="text-xs text-[var(--muted-foreground)]">导出</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleViewSvgSource}
+                  className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors group relative"
+                  title="查看 SVG 源码"
+                >
+                  <Code size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]" />
+                </button>
+                <button
+                  onClick={handleCopySvg}
+                  className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors group relative"
+                  title="复制 SVG"
+                >
+                  <Copy size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]" />
+                </button>
+                <button
+                  onClick={handleDownloadSvg}
+                  className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors group relative"
+                  title="下载 SVG"
+                >
+                  <Download size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]" />
+                </button>
+                <div className="w-px h-4 bg-[var(--border)] mx-1" />
+                <button
+                  onClick={handleCopyPng}
+                  className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors group relative"
+                  title="复制 PNG"
+                >
+                  <ClipboardCopy size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]" />
+                </button>
+                <button
+                  onClick={handleDownloadPng}
+                  className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors group relative"
+                  title="下载 PNG"
+                >
+                  <FileImage size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]" />
+                </button>
+              </div>
+            </div>
           </Card>
         </div>
       </div>
